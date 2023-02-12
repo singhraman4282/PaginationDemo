@@ -108,6 +108,8 @@ final class DefaultMVVMViewModel: MVVMViewModel, MVVMViewModelInput, MVVMViewMod
         }
     }
     
+    // MARK: Helper Methods
+    
     private func update(with paginationObject: PaginationObject<String>) {
         var items = itemsSubject.value
         items.append(contentsOf: paginationObject.items)

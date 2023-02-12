@@ -76,6 +76,8 @@ final class MVCViewController: UIViewController {
         tableView.dataSource = self
     }
     
+    // MARK: Helper Methods
+    
     private func fetchItems() {
         
         guard isFetching.isFalse && didReachEndOfPagination.isFalse else {
@@ -119,6 +121,8 @@ final class MVCViewController: UIViewController {
     }
     
 }
+
+// MARK: - UITableViewDataSource
 
 extension MVCViewController: UITableViewDataSource {
     

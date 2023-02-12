@@ -77,6 +77,8 @@ final class MVVMViewController: UIViewController {
     
 }
 
+// MARK: - UITableViewDataSource
+
 extension MVVMViewController: UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
