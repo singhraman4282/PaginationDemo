@@ -18,21 +18,39 @@ final class MVCViewController: UIViewController {
         return table
     }()
     
+    private let networkClient: NetworkClient
+    private let paginationUrlGenerator: PaginationUrlGenerator
+    private let endpoint: String
+    private let itemsPerPage: Int
+    
+    private var currentPage: Int
+    private var isFetching: Bool = false
+    private var didReachEndOfPagination: Bool = false
     private var items: [String] = []
     
-    private let endpoint: String = "someurl.com"
+    // MARK: Initialization
     
-    private var itemsPerPage: Int = 10
+    init(endpoint: String = "someurl.com",
+         itemsPerPage: Int = 10,
+         currentPage: Int = 1,
+         title: String = "MVC",
+         networkClient: NetworkClient = DefaultNetworkClient.mockingNetworkProtocol,
+         paginationUrlGenerator: PaginationUrlGenerator = DefaultPaginationUrlGenerator()) {
+        
+        self.endpoint = endpoint
+        self.itemsPerPage = itemsPerPage
+        self.currentPage = currentPage
+        self.networkClient = networkClient
+        self.paginationUrlGenerator = paginationUrlGenerator
+        
+        super.init(nibName: nil, bundle: nil)
+        
+        self.title = title
+    }
     
-    private var currentPage: Int = 1
-    
-    private let networkClient: NetworkClient = DefaultNetworkClient.mockingNetworkProtocol
-    
-    private let paginationUrlGenerator: PaginationUrlGenerator = DefaultPaginationUrlGenerator()
-    
-    private var isFetching: Bool = false
-    
-    private var didReachEndOfPagination: Bool = false
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
     
     // MARK: View Lifecycle
     
@@ -40,7 +58,6 @@ final class MVCViewController: UIViewController {
         super.viewDidLoad()
         
         setupTableView()
-        title = "MVC"
     }
     
     // MARK: Setup
