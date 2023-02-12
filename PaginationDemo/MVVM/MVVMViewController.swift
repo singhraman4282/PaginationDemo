@@ -43,6 +43,8 @@ final class MVVMViewController: UIViewController {
         
         setupTableView()
         subscribeToViewModel()
+        
+        title = viewModel.output.title
     }
     
     // MARK: Setup

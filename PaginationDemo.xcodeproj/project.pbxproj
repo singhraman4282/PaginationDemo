@@ -22,6 +22,7 @@
 		3CF442F22997581B006C0F60 /* PaginationObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CF442F12997581B006C0F60 /* PaginationObject.swift */; };
 		3CF442F5299760E0006C0F60 /* MVVMViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CF442F4299760E0006C0F60 /* MVVMViewController.swift */; };
 		3CF442F7299760FD006C0F60 /* MVVMViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CF442F6299760FD006C0F60 /* MVVMViewModel.swift */; };
+		3CF442FA2998700E006C0F60 /* PaginationUrlGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CF442F92998700E006C0F60 /* PaginationUrlGenerator.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -61,6 +62,7 @@
 		3CF442F12997581B006C0F60 /* PaginationObject.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaginationObject.swift; sourceTree = "<group>"; };
 		3CF442F4299760E0006C0F60 /* MVVMViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MVVMViewController.swift; sourceTree = "<group>"; };
 		3CF442F6299760FD006C0F60 /* MVVMViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MVVMViewModel.swift; sourceTree = "<group>"; };
+		3CF442F92998700E006C0F60 /* PaginationUrlGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaginationUrlGenerator.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -111,10 +113,10 @@
 		3CF442B729971924006C0F60 /* PaginationDemo */ = {
 			isa = PBXGroup;
 			children = (
-				3CF442B829971924006C0F60 /* AppDelegate.swift */,
-				3CF442BA29971924006C0F60 /* SceneDelegate.swift */,
+				3CF442FB29987033006C0F60 /* Application */,
 				3CF442BC29971924006C0F60 /* ViewController.swift */,
-				3CF442E829971957006C0F60 /* NetworkClient.swift */,
+				3CF442FC2998712C006C0F60 /* Network */,
+				3CF442F829987003006C0F60 /* Utility */,
 				3CF442F029975807006C0F60 /* Model */,
 				3CF442ED299752B3006C0F60 /* Common */,
 				3CF442EA299751FF006C0F60 /* MVC */,
@@ -175,6 +177,31 @@
 				3CF442F6299760FD006C0F60 /* MVVMViewModel.swift */,
 			);
 			path = MVVM;
+			sourceTree = "<group>";
+		};
+		3CF442F829987003006C0F60 /* Utility */ = {
+			isa = PBXGroup;
+			children = (
+				3CF442F92998700E006C0F60 /* PaginationUrlGenerator.swift */,
+			);
+			path = Utility;
+			sourceTree = "<group>";
+		};
+		3CF442FB29987033006C0F60 /* Application */ = {
+			isa = PBXGroup;
+			children = (
+				3CF442B829971924006C0F60 /* AppDelegate.swift */,
+				3CF442BA29971924006C0F60 /* SceneDelegate.swift */,
+			);
+			path = Application;
+			sourceTree = "<group>";
+		};
+		3CF442FC2998712C006C0F60 /* Network */ = {
+			isa = PBXGroup;
+			children = (
+				3CF442E829971957006C0F60 /* NetworkClient.swift */,
+			);
+			path = Network;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -311,6 +338,7 @@
 				3CF442F5299760E0006C0F60 /* MVVMViewController.swift in Sources */,
 				3CF442F7299760FD006C0F60 /* MVVMViewModel.swift in Sources */,
 				3CF442EF299752CE006C0F60 /* LoadingCell.swift in Sources */,
+				3CF442FA2998700E006C0F60 /* PaginationUrlGenerator.swift in Sources */,
 				3CF442EC29975216006C0F60 /* MVCViewController.swift in Sources */,
 				3CF442BD29971924006C0F60 /* ViewController.swift in Sources */,
 				3CF442B929971924006C0F60 /* AppDelegate.swift in Sources */,

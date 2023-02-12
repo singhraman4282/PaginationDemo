@@ -8,6 +8,8 @@
 import Foundation
 import Combine
 
+// MARK: - NetworkClient
+
 protocol NetworkClient {
     
     func fetch<T: Decodable>(from url: URL) async throws -> T
@@ -15,29 +17,26 @@ protocol NetworkClient {
     
 }
 
+// MARK: - DefaultNetworkClient
+
 struct DefaultNetworkClient: NetworkClient {
     
     enum NetworkError: LocalizedError {
         case noData
-        case decodingError(Error)
     }
     
     let urlSession: URLSession
+    let decoder: JSONDecoder
     
     func fetch<T: Decodable>(from url: URL) async throws -> T {
-        try await withCheckedThrowingContinuation { contination in
-            fetch(from: url) { (result: Result<T, Error>) in
-                switch result {
-                case .success(let item):
-                    contination.resume(returning: item)
-                case .failure(let error):
-                    contination.resume(throwing: error)
-                }
-            }
-        }
+        let data = try await urlSession.data(from: url).0
+        return try decoder.decode(T.self, from: data)
     }
     
     func fetch<T>(from url: URL, completion: @escaping (Result<T, Error>) -> Void) where T : Decodable {
+        
+        print("fetching from \(url)")
+        
         urlSession.dataTask(with: url) { data, _, error in
             if let error {
                 completion(.failure(error))
@@ -50,10 +49,10 @@ struct DefaultNetworkClient: NetworkClient {
             }
             
             do {
-                let object = try JSONDecoder().decode(T.self, from: data)
+                let object = try decoder.decode(T.self, from: data)
                 completion(.success(object))
             } catch {
-                completion(.failure(NetworkError.decodingError(error)))
+                completion(.failure(error))
             }
         }.resume()
     }
@@ -68,64 +67,69 @@ extension DefaultNetworkClient {
         let configurationWithMock = URLSessionConfiguration.default
         configurationWithMock.protocolClasses?.insert(MockURLProtocol.self, at: 0)
         
-        return DefaultNetworkClient(urlSession: URLSession(configuration: configurationWithMock))
+        return DefaultNetworkClient(
+            urlSession: URLSession(configuration: configurationWithMock),
+            decoder: JSONDecoder())
     }()
     
 }
 
+// MARK: - MockURLProtocol
+
 private final class MockURLProtocol: URLProtocol {
     
     override class func canInit(with task: URLSessionTask) -> Bool {
-            return true
-        }
-
-        override class func canInit(with request: URLRequest) -> Bool {
-            return true
-        }
-
-        override class func canonicalRequest(for request: URLRequest) -> URLRequest {
-            return request
-        }
-
-        override func startLoading() {
-            
-            guard let url = request.url else {
-                return
-            }
-            
-            let components = URLComponents(url: url, resolvingAgainstBaseURL: false)
-            let queryItems = components?.queryItems ?? []
-            
-            let count = queryItems
-                .first(where: { $0.name == "count" })
-                .flatMap { $0.value }
-                .flatMap { Int($0) }
-            
-            let pageNumber = queryItems
-                .first(where: { $0.name == "page_number" })
-                .flatMap { $0.value }
-                .flatMap { Int($0) }
-            
-            guard let count, let pageNumber else {
-                preconditionFailure("Invalid URL")
-            }
-            
-            ItemsGenerator.generateItems(count: count, pageNumber: pageNumber) { result in
-                switch result {
-                case .success(let data):
-                    self.client?.urlProtocol(self, didLoad: data)
-                    self.client?.urlProtocol(self, didReceive: HTTPURLResponse(), cacheStoragePolicy: .allowed)
-                case .failure(let error):
-                    self.client?.urlProtocol(self, didFailWithError: error)
-                }
-                self.client?.urlProtocolDidFinishLoading(self)
-            }
-        }
+        return true
+    }
     
-        override func stopLoading() {}
+    override class func canInit(with request: URLRequest) -> Bool {
+        return true
+    }
+    
+    override class func canonicalRequest(for request: URLRequest) -> URLRequest {
+        return request
+    }
+    
+    override func startLoading() {
+        
+        guard let url = request.url else {
+            return
+        }
+        
+        let components = URLComponents(url: url, resolvingAgainstBaseURL: false)
+        let queryItems = components?.queryItems ?? []
+        
+        let count = queryItems
+            .first(where: { $0.name == "count" })
+            .flatMap { $0.value }
+            .flatMap { Int($0) }
+        
+        let pageNumber = queryItems
+            .first(where: { $0.name == "page_number" })
+            .flatMap { $0.value }
+            .flatMap { Int($0) }
+        
+        guard let count, let pageNumber else {
+            preconditionFailure("Invalid URL")
+        }
+        
+        ItemsGenerator.generateItems(count: count, pageNumber: pageNumber) { result in
+            switch result {
+            case .success(let data):
+                self.client?.urlProtocol(self, didLoad: data)
+                self.client?.urlProtocol(self, didReceive: HTTPURLResponse(), cacheStoragePolicy: .allowed)
+            case .failure(let error):
+                self.client?.urlProtocol(self, didFailWithError: error)
+            }
+            self.client?.urlProtocolDidFinishLoading(self)
+        }
+    }
+    
+    override func stopLoading() {}
     
 }
 
+// MARK: - ItemsGenerator
 
 /// This is mocking what a server would typically send when we make a request
 private struct ItemsGenerator {
@@ -150,11 +154,6 @@ private struct ItemsGenerator {
             preconditionFailure("Typically the page number is a positive integer")
         }
         
-        guard pageNumber <= 10 else {
-            completion(.failure(MockError.reachedEnd))
-            return
-        }
-        
         let startingPoint = (abs(pageNumber - 1) * count) + 1
         let endingPoint = startingPoint + count
         
@@ -169,7 +168,9 @@ private struct ItemsGenerator {
         let data = (try? encoder.encode(response)) ?? Data()
         
         // Imitating delay in server response
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+        let delay = (5...20).map({ Double($0) }).randomElement().map( { $0 / 10.0 } ) ?? 0.5
+        
+        DispatchQueue.global().asyncAfter(deadline: .now() + delay) {
             completion(.success(data))
         }
     }

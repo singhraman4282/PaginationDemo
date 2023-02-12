@@ -20,7 +20,7 @@ final class MVCViewController: UIViewController {
     
     private var items: [String] = []
     
-    private let endpoint: String = "https://someurl.com"
+    private let endpoint: String = "someurl.com"
     
     private var itemsPerPage: Int = 10
     
@@ -40,6 +40,7 @@ final class MVCViewController: UIViewController {
         super.viewDidLoad()
         
         setupTableView()
+        title = "MVC"
     }
     
     // MARK: Setup
@@ -96,7 +97,7 @@ final class MVCViewController: UIViewController {
             currentPage += 1
         }
         
-        didReachEndOfPagination = paginationObject.currentPage == paginationObject.totalPages
+        didReachEndOfPagination = paginationObject.didReachEndOfPagination
         tableView.reloadData()
     }
     
@@ -105,7 +106,7 @@ final class MVCViewController: UIViewController {
 extension MVCViewController: UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        let extra = didReachEndOfPagination.isFalse ? 1 : 0
+        let extra = didReachEndOfPagination ? 0 : 1
         return items.count + extra
     }
     

@@ -9,20 +9,20 @@ import Foundation
 
 // MARK: - Domain
 
-struct PaginationObject<T: Decodable> {
+struct PaginationObject<T: Decodable>: Decodable {
     let items: [T]
     let currentPage: Int
     let totalPages: Int
     
-    static func empty<T>() -> PaginationObject<T> {
-        .init(items: [], currentPage: 1, totalPages: Int.max)
+    var didReachEndOfPagination: Bool {
+        currentPage == totalPages
     }
 }
 
 // MARK: - Data
 
 /// DTO - Data Transfer Object
-struct PaginationResponseDTO: Codable {
+struct PaginationResponseDTO: Decodable {
     let items: [String]
     let currentPage: Int
     let totalPages: Int

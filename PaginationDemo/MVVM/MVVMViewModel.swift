@@ -13,6 +13,7 @@ import Combine
 protocol MVVMViewModelOutput {
     var items: AnyPublisher<[String], Never> { get }
     var shouldShowLoadingCell: Bool { get }
+    var title: String { get }
 }
 
 // MARK: - MVVMViewModelInput
@@ -34,11 +35,13 @@ final class DefaultMVVMViewModel: MVVMViewModel, MVVMViewModelInput, MVVMViewMod
     
     // MARK: MVVMViewModelOutput
     
+    let title: String
+    
+    private (set) var shouldShowLoadingCell: Bool = true
+    
     var items: AnyPublisher<[String], Never> {
         itemsSubject.eraseToAnyPublisher()
     }
-    
-    private (set) var shouldShowLoadingCell: Bool = true
     
     // MARK: MVVMViewModel
     
@@ -47,25 +50,28 @@ final class DefaultMVVMViewModel: MVVMViewModel, MVVMViewModelInput, MVVMViewMod
     
     // MARK: Private properties
     
-    private var itemsSubject: CurrentValueSubject<[String], Never> = CurrentValueSubject([])
+    private let itemsSubject: CurrentValueSubject<[String], Never> = CurrentValueSubject([])
     private let endpoint: String
+    private let paginationUrlGenerator: PaginationUrlGenerator
+    private let networkClient: NetworkClient
+    
     private var itemsPerPage: Int
     private var currentPage: Int
-    private let networkClient: NetworkClient
     private var isFetching: Bool = false
-    private let paginationUrlGenerator: PaginationUrlGenerator
-    
+     
     // MARK: Initialization
     
-    init(endpoint: String = "https://someurl.com",
+    init(endpoint: String = "someurl.com",
          itemsPerPage: Int = 10,
          currentPage: Int = 1,
+         title: String = "MVVM",
          networkClient: NetworkClient = DefaultNetworkClient.mockingNetworkProtocol,
          paginationUrlGenerator: PaginationUrlGenerator = DefaultPaginationUrlGenerator()) {
         
         self.endpoint = endpoint
         self.itemsPerPage = itemsPerPage
         self.currentPage = currentPage
+        self.title = title
         self.networkClient = networkClient
         self.paginationUrlGenerator = paginationUrlGenerator
     }
@@ -109,28 +115,8 @@ final class DefaultMVVMViewModel: MVVMViewModel, MVVMViewModelInput, MVVMViewMod
             currentPage += 1
         }
         
-        shouldShowLoadingCell = paginationObject.currentPage != paginationObject.totalPages
+        shouldShowLoadingCell = paginationObject.didReachEndOfPagination.isFalse
         itemsSubject.send(items)
     }
     
-}
-
-protocol PaginationUrlGenerator {
-    
-    func generateUrl(for endpoint: String, itemsPerPage: Int, pageNumber: Int) -> URL?
-    
-}
-
-struct DefaultPaginationUrlGenerator: PaginationUrlGenerator {
-    
-    func generateUrl(for endpoint: String, itemsPerPage: Int, pageNumber: Int) -> URL? {
-        var components = URLComponents()
-        components.host = endpoint
-        components.queryItems = [
-            .init(name: "count", value: itemsPerPage.description),
-            .init(name: "page_number", value: pageNumber.description),
-        ]
-        
-        return components.url
-    }
 }
