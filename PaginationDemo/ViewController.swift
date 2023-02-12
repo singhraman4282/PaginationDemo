@@ -13,7 +13,14 @@ class ViewController: UIViewController {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
     }
-
+    
+    @IBAction func mvcPressed(_ sender: UIButton) {
+        navigationController?.pushViewController(MVCViewController(), animated: true)
+    }
+    
+    @IBAction func mvvmPressed(_ sender: UIButton) {
+        navigationController?.pushViewController(MVVMViewController(), animated: true)
+    }
 
 }
 
