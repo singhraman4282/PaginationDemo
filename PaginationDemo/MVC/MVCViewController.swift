@@ -26,7 +26,7 @@ final class MVCViewController: UIViewController {
     
     private var currentPage: Int = 1
     
-    private let networkClient: NetworkClient = DefaultNetworkClient()
+    private let networkClient: NetworkClient = DefaultNetworkClient.mockingNetworkProtocol
     
     private let paginationUrlGenerator: PaginationUrlGenerator = DefaultPaginationUrlGenerator()
     
@@ -78,8 +78,10 @@ final class MVCViewController: UIViewController {
         networkClient.fetch(from: url) { [weak self] (result: Result<PaginationResponseDTO, Error>) in
             switch result {
             case .success(let dto):
-                self?.isFetching.toggle()
-                self?.update(with: dto.toDomain)
+                DispatchQueue.main.async {
+                    self?.isFetching.toggle()
+                    self?.update(with: dto.toDomain)
+                }
             case .failure:
                 self?.isFetching.toggle()
                 // TODO: Handle error here

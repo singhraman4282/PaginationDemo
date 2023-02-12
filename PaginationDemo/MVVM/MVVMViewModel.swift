@@ -60,7 +60,7 @@ final class DefaultMVVMViewModel: MVVMViewModel, MVVMViewModelInput, MVVMViewMod
     init(endpoint: String = "https://someurl.com",
          itemsPerPage: Int = 10,
          currentPage: Int = 1,
-         networkClient: NetworkClient = DefaultNetworkClient(),
+         networkClient: NetworkClient = DefaultNetworkClient.mockingNetworkProtocol,
          paginationUrlGenerator: PaginationUrlGenerator = DefaultPaginationUrlGenerator()) {
         
         self.endpoint = endpoint

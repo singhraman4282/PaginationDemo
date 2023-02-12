@@ -17,6 +17,13 @@ protocol NetworkClient {
 
 struct DefaultNetworkClient: NetworkClient {
     
+    enum NetworkError: LocalizedError {
+        case noData
+        case decodingError(Error)
+    }
+    
+    let urlSession: URLSession
+    
     func fetch<T: Decodable>(from url: URL) async throws -> T {
         try await withCheckedThrowingContinuation { contination in
             fetch(from: url) { (result: Result<T, Error>) in
@@ -31,38 +38,91 @@ struct DefaultNetworkClient: NetworkClient {
     }
     
     func fetch<T>(from url: URL, completion: @escaping (Result<T, Error>) -> Void) where T : Decodable {
-        /// In real life, we'd be making an http request and parsing the response. But for our example, we're just passing the parameters to an `ItemGenerator`.
-        let components = URLComponents(url: url, resolvingAgainstBaseURL: false)
-        let queryItems = components?.queryItems ?? []
-        
-        let count = queryItems
-            .first(where: { $0.name == "count" })
-            .flatMap { $0.value }
-            .flatMap { Int($0) }
-        
-        let pageNumber = queryItems
-            .first(where: { $0.name == "page_number" })
-            .flatMap { $0.value }
-            .flatMap { Int($0) }
-        
-        guard let count, let pageNumber else {
-            preconditionFailure("Invalid URL")
-        }
-        
-        ItemsGenerator.generateItems(count: count, pageNumber: pageNumber) { result in
-            switch result {
-            case .success(let data):
-                do {
-                    let dto = try JSONDecoder().decode(T.self, from: data)
-                    completion(.success(dto))
-                } catch {
-                    completion(.failure(error))
-                }
-            case .failure(let error):
+        urlSession.dataTask(with: url) { data, _, error in
+            if let error {
                 completion(.failure(error))
+                return
+            }
+            
+            guard let data else {
+                completion(.failure(NetworkError.noData))
+                return
+            }
+            
+            do {
+                let object = try JSONDecoder().decode(T.self, from: data)
+                completion(.success(object))
+            } catch {
+                completion(.failure(NetworkError.decodingError(error)))
+            }
+        }.resume()
+    }
+    
+}
+
+extension DefaultNetworkClient {
+    
+    static let mockingNetworkProtocol: NetworkClient = {
+        URLProtocol.registerClass(MockURLProtocol.self)
+        
+        let configurationWithMock = URLSessionConfiguration.default
+        configurationWithMock.protocolClasses?.insert(MockURLProtocol.self, at: 0)
+        
+        return DefaultNetworkClient(urlSession: URLSession(configuration: configurationWithMock))
+    }()
+    
+}
+
+private final class MockURLProtocol: URLProtocol {
+    
+    override class func canInit(with task: URLSessionTask) -> Bool {
+            return true
+        }
+
+        override class func canInit(with request: URLRequest) -> Bool {
+            return true
+        }
+
+        override class func canonicalRequest(for request: URLRequest) -> URLRequest {
+            return request
+        }
+
+        override func startLoading() {
+            
+            guard let url = request.url else {
+                return
+            }
+            
+            let components = URLComponents(url: url, resolvingAgainstBaseURL: false)
+            let queryItems = components?.queryItems ?? []
+            
+            let count = queryItems
+                .first(where: { $0.name == "count" })
+                .flatMap { $0.value }
+                .flatMap { Int($0) }
+            
+            let pageNumber = queryItems
+                .first(where: { $0.name == "page_number" })
+                .flatMap { $0.value }
+                .flatMap { Int($0) }
+            
+            guard let count, let pageNumber else {
+                preconditionFailure("Invalid URL")
+            }
+            
+            ItemsGenerator.generateItems(count: count, pageNumber: pageNumber) { result in
+                switch result {
+                case .success(let data):
+                    self.client?.urlProtocol(self, didLoad: data)
+                    self.client?.urlProtocol(self, didReceive: HTTPURLResponse(), cacheStoragePolicy: .allowed)
+                case .failure(let error):
+                    self.client?.urlProtocol(self, didFailWithError: error)
+                }
+                self.client?.urlProtocolDidFinishLoading(self)
             }
         }
-    }
+    
+        override func stopLoading() {}
     
 }
 
