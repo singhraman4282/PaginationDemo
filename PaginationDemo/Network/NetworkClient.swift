@@ -76,6 +76,7 @@ extension DefaultNetworkClient {
 
 // MARK: - MockURLProtocol
 
+/// Note: - We can replace swagger with this. 💰💵
 private final class MockURLProtocol: URLProtocol {
     
     override class func canInit(with task: URLSessionTask) -> Bool {

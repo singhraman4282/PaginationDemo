@@ -1,14 +1,19 @@
 //
-//  PaginationDemoTests.swift
-//  PaginationDemoTests
+//  copypasta.swift
+//  PaginationDemo
 //
-//  Created by Raman Singh on 2023-02-10.
+//  Created by Raman Singh on 2023-02-26.
 //
 
 import XCTest
-@testable import PaginationDemo
+import Foundation
+#if BBR_APP
+@testable import BBR_Dev
+#else
+@testable import ShopApp
+#endif
 
-final class PaginationDemoTests: XCTestCase {
+final class SFCCPaginationQueryProviderTests: XCTestCase {
     
     private var queryProvider: SFCCPaginationQueryProvider!
     private let defaultPageSize: Int = 10
@@ -159,34 +164,73 @@ final class PaginationDemoTests: XCTestCase {
     private func getItemsCount(in queries: [URLQueryItem]) -> Int? {
         queries.get(queryItemWithKey: "count")?.value.flatMap { Int($0) }
     }
+    
+}
 
+private extension Array where Element == URLQueryItem {
+    
+    func get(queryItemWithKey key: String) -> URLQueryItem? {
+        first(where: { $0.name == key })
+    }
 }
 
 final class SFCCPaginationQueryProvider {
     
+    
     // MARK: Properties
+    
+    
+    private let startIndexKey: String
+    private let countKey: String
     
     private var pageSize: Int
     private var startIndex: Int
     private var reachedEnd: Bool = false
     
+    
     // MARK: Initialization
     
-    init(pageSize: Int, startIndex: Int) {
+    
+    /// Initialization
+    /// - Parameters:
+    ///   - pageSize: The number of items that should be returned
+    ///   - startIndex: The strating index
+    ///   - startIndexKey: The name for query item to be sent dictating the start index for the request
+    ///   - countKey: The name for query item to be sent dictating the number of items expected for the request
+    init(pageSize: Int,
+         startIndex: Int,
+         startIndexKey: String = SFCCAPI.Field.start,
+         countKey: String = SFCCAPI.Field.count) {
+        
         self.pageSize = pageSize
         self.startIndex = startIndex
+        self.startIndexKey = startIndexKey
+        self.countKey = countKey
     }
     
+    
+    // MARK: Helper Methods
+    
+    
+    /// Updates start index and count for next query and whether more items are available for download
+    /// - Parameters:
+    ///   - count: The number of items received in last query
+    ///   - start: Starting index for last query
+    ///   - total: Total items available for download
     func handleDownloadedItems(count: Int, start: Int, total: Int) {
         startIndex = start + count
         pageSize = min(total - startIndex, pageSize)
         reachedEnd = (total - start) == count
     }
     
+    /// Boolean indicating whether more items are available for download
+    /// - Returns: Boolean
     func moreItemsAvailable() -> Bool {
         reachedEnd.isFalse
     }
     
+    /// Provides query items to be added for pagination to next request
+    /// - Returns: An array of `URLQueryItem` objects
     func next() -> [URLQueryItem] {
         
         guard moreItemsAvailable() else {
@@ -199,14 +243,9 @@ final class SFCCPaginationQueryProvider {
         ]
     }
     
+    /// Returns total items downloaded so far
+    /// - Returns: Integer representing total items downloaded so far
     func downloadedItemsCount() -> Int {
         startIndex
-    }
-}
-
-extension Array where Element == URLQueryItem {
-    
-    func get(queryItemWithKey key: String) -> URLQueryItem? {
-        first(where: { $0.name == key })
     }
 }
